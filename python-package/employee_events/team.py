@@ -1,66 +1,77 @@
-# Import the QueryBase class
-# YOUR CODE HERE
-
-# Import dependencies for sql execution
-#### YOUR CODE HERE
-
-# Create a subclass of QueryBase
-# called  `Team`
-#### YOUR CODE HERE
-
-    # Set the class attribute `name`
-    # to the string "team"
-    #### YOUR CODE HERE
+from .query_base import QueryBase
+import pandas as pd
+import sqlite3
+from .sql_execution import query
 
 
-    # Define a `names` method
-    # that receives no arguments
-    # This method should return
-    # a list of tuples from an sql execution
-    #### YOUR CODE HERE
-        
-        # Query 5
-        # Write an SQL query that selects
-        # the team_name and team_id columns
-        # from the team table for all teams
-        # in the database
-        #### YOUR CODE HERE
-    
+class Team(QueryBase):
+    '''
+    Subclass for querying team details from the database
+    '''
 
-    # Define a `username` method
-    # that receives an ID argument
-    # This method should return
-    # a list of tuples from an sql execution
-    #### YOUR CODE HERE
+    name = "team"
 
-        # Query 6
-        # Write an SQL query
-        # that selects the team_name column
-        # Use f-string formatting and a WHERE filter
-        # to only return the team name related to
-        # the ID argument
-        #### YOUR CODE HERE
+    def names(self):
+        '''
+        Return a list of tuples containing team names and ids
+        '''
+        conn = sqlite3.connect(self.db_path)
+        query = f"""
+            SELECT team_name, team_id FROM {self.name}
+            ORDER BY team_id ASC
+        """
+        result = pd.read_sql_query(query, conn)
+        conn.close()
+        return list(result.itertuples(index=False, name=None))
 
+    def username(self, teamid):
+        '''
+        Return a list of tuples containing the team name for the given id
+        Note: uses separate query, in place of using names method
+        '''
+        conn = sqlite3.connect(self.db_path)
+        query = f"""
+            SELECT team_name, team_id
+            FROM {self.name}
+            WHERE team_id = {teamid}
+        """
+        result = pd.read_sql_query(query, conn)
+        conn.close()
+        result = list(result.itertuples(index=False, name=None))
+        if len(result) > 0:
+            return result[0]
+        else:
+            return None
 
-    # Below is method with an SQL query
-    # This SQL query generates the data needed for
-    # the machine learning model.
-    # Without editing the query, alter this method
-    # so when it is called, a pandas dataframe
-    # is returns containing the execution of
-    # the sql query
-    #### YOUR CODE HERE
-    def model_data(self, id):
+    @query
+    def get_employees(self, teamid):
+        return f"SELECT employee_id FROM employee WHERE team_id = {teamid}"
 
-        return f"""
+    def notes(self, teamid):
+        '''
+        Get all employees in that team id, and corr. notes
+        '''
+        employees = [id for id, in self.get_employees(teamid)]
+        return super().notes(employees)
+
+    def model_data(self, teamid):
+        '''
+        Return a pandas dataframe with the positive and negative events for the given team id
+        '''
+        conn = sqlite3.connect(self.db_path)
+        tbl_name = "employee_events"
+        query = f"""
             SELECT positive_events, negative_events FROM (
                     SELECT employee_id
                          , SUM(positive_events) positive_events
                          , SUM(negative_events) negative_events
                     FROM {self.name}
-                    JOIN employee_events
+                    JOIN {tbl_name}
                         USING({self.name}_id)
-                    WHERE {self.name}.{self.name}_id = {id}
+                    WHERE {self.name}.{self.name}_id = {teamid}
                     GROUP BY employee_id
                    )
                 """
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+        return df

@@ -1,65 +1,54 @@
-# Import the QueryBase class
-#### YOUR CODE HERE
-
-# Import dependencies needed for sql execution
-# from the `sql_execution` module
-#### YOUR CODE HERE
-
-# Define a subclass of QueryBase
-# called Employee
-#### YOUR CODE HERE
-
-    # Set the class attribute `name`
-    # to the string "employee"
-    #### YOUR CODE HERE
+from .query_base import QueryBase
+import pandas as pd
+import sqlite3
 
 
-    # Define a method called `names`
-    # that receives no arguments
-    # This method should return a list of tuples
-    # from an sql execution
-    #### YOUR CODE HERE
-        
-        # Query 3
-        # Write an SQL query
-        # that selects two columns 
-        # 1. The employee's full name
-        # 2. The employee's id
-        # This query should return the data
-        # for all employees in the database
-        #### YOUR CODE HERE
-    
+class Employee(QueryBase):
+    '''
+    Subclass for querying employee details from the database
+    '''
 
-    # Define a method called `username`
-    # that receives an `id` argument
-    # This method should return a list of tuples
-    # from an sql execution
-    #### YOUR CODE HERE
-        
-        # Query 4
-        # Write an SQL query
-        # that selects an employees full name
-        # Use f-string formatting and a WHERE filter
-        # to only return the full name of the employee
-        # with an id equal to the id argument
-        #### YOUR CODE HERE
+    name = "employee"
 
+    def names(self):
+        '''
+        Return a list of tuples containing employee full names and ids
+        '''
+        conn = sqlite3.connect(self.db_path)
+        query = f"""
+            SELECT first_name || ' ' || last_name AS full_name, employee_id FROM {self.name}
+            ORDER BY employee_id ASC
+        """
+        result = pd.read_sql_query(query, conn)
+        conn.close()
+        return list(result.itertuples(index=False, name=None))
 
-    # Below is method with an SQL query
-    # This SQL query generates the data needed for
-    # the machine learning model.
-    # Without editing the query, alter this method
-    # so when it is called, a pandas dataframe
-    # is returns containing the execution of
-    # the sql query
-    #### YOUR CODE HERE
-    def model_data(self, id):
+    def username(self, empid):
+        '''
+        Return a list of tuples containing the full name of the employee with the given id
+        '''
+        all_names = self.names()
+        result = [(full_name, employee_id)
+                  for full_name, employee_id in all_names if employee_id == empid]
+        if len(result) > 0:
+            return result[0]
+        else:
+            return None
 
-        return f"""
-                    SELECT SUM(positive_events) positive_events
-                         , SUM(negative_events) negative_events
-                    FROM {self.name}
-                    JOIN employee_events
-                        USING({self.name}_id)
-                    WHERE {self.name}.{self.name}_id = {id}
-                """
+    def model_data(self, empid):
+        '''
+        Return a pandas dataframe with the summed positive and negative events for the given employee id
+        '''
+        conn = sqlite3.connect(self.db_path)
+        tbl_name = "employee_events"
+        query = f"""
+            SELECT SUM(positive_events) positive_events
+                , SUM(negative_events) negative_events
+            FROM {self.name}
+            JOIN {tbl_name}
+                USING({self.name}_id)
+            WHERE {self.name}.{self.name}_id = {empid}
+        """
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+        return df
