@@ -79,3 +79,39 @@ erDiagram
   employee ||--o{ employee_events : "employee_id"
   notes }o--o{ employee_events : ""
 ```
+
+## Code Submission Demos
+
+Following images are taken from the code submission, and show for e.g. project execution with `launch.json`, running test-cases, etc.
+
+### debug-launch
+<table>
+    <tr>
+        <td><img src="readme_img/debug-launch-1.png" alt="debug-launch-1" height="200"></td>
+        <td><img src="readme_img/debug-launch-2.png" alt="debug-launch-2" height="200"></td>
+    </tr>
+</table>
+
+### employee-graphs
+<table>
+    <tr>
+        <td><img src="readme_img/employee.png" alt="employee" height="200"></td>
+        <td><img src="readme_img/employees.png" alt="employees" height="200"></td>
+    </tr>
+</table>
+
+### team-graphs
+<table>
+    <tr>
+        <td><img src="readme_img/team.png" alt="team" height="200"></td>
+        <td><img src="readme_img/teams.png" alt="teams" height="200"></td>
+    </tr>
+</table>
+
+### test-cases
+<table>
+    <tr>
+        <td><img src="readme_img/test-cases.png" alt="test-cases" height="200"></td>
+    </tr>
+</table>
+
