@@ -1,6 +1,4 @@
 from .query_base import QueryBase
-import pandas as pd
-import sqlite3
 
 
 class Employee(QueryBase):
@@ -14,13 +12,11 @@ class Employee(QueryBase):
         '''
         Return a list of tuples containing employee full names and ids
         '''
-        conn = sqlite3.connect(self.db_path)
         query = f"""
             SELECT first_name || ' ' || last_name AS full_name, employee_id FROM {self.name}
             ORDER BY employee_id ASC
         """
-        result = pd.read_sql_query(query, conn)
-        conn.close()
+        result = self.pandas_query(query)
         return list(result.itertuples(index=False, name=None))
 
     def username(self, empid):
@@ -39,7 +35,6 @@ class Employee(QueryBase):
         '''
         Return a pandas dataframe with the summed positive and negative events for the given employee id
         '''
-        conn = sqlite3.connect(self.db_path)
         tbl_name = "employee_events"
         query = f"""
             SELECT SUM(positive_events) positive_events
@@ -49,6 +44,4 @@ class Employee(QueryBase):
                 USING({self.name}_id)
             WHERE {self.name}.{self.name}_id = {empid}
         """
-        df = pd.read_sql_query(query, conn)
-        conn.close()
-        return df
+        return self.pandas_query(query)

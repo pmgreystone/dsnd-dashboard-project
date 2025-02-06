@@ -7,7 +7,7 @@ requirements = (cwd / 'employee_events' /
 
 setup_args = dict(
     name='employee_events',
-    version='2.1',
+    version='2.3',
     description='Udacity Sample Employee Events',
     packages=find_packages(),
     package_data={'': ['employee_events.db', 'requirements.txt']},

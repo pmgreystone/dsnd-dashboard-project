@@ -14,20 +14,19 @@ class QueryMixin:
         '''
         Execute an SQL query and return the result as a pandas dataframe
         '''
-        conn = sqlite3.connect(db_path)
-        df = pd.read_sql_query(sql_query, conn)
-        conn.close()
+        df = None
+        with connect(db_path) as conn:
+            df = pd.read_sql_query(sql_query, conn)
         return df
 
     def query(self, sql_query):
         '''
         Execute an SQL query and return the result as a list of tuples
         '''
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute(sql_query)
-        result = cursor.fetchall()
-        conn.close()
+        result = None
+        with connect(db_path) as conn:
+            cursor = conn.cursor()
+            result = cursor.execute(sql_query).fetchall()
         return result
 
  # Leave this code unchanged
@@ -41,10 +40,10 @@ def query(func):
     @wraps(func)
     def run_query(*args, **kwargs):
         query_string = func(*args, **kwargs)
-        connection = connect(db_path)
-        cursor = connection.cursor()
-        result = cursor.execute(query_string).fetchall()
-        connection.close()
+        result = None
+        with connect(db_path) as conn:
+            cursor = conn.cursor()
+            result = cursor.execute(query_string).fetchall()
         return result
 
     return run_query

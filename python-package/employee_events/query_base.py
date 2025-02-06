@@ -1,15 +1,10 @@
-import pandas as pd
-import sqlite3
-from pathlib import Path
+from .sql_execution import QueryMixin
 
 
-class QueryBase:
+class QueryBase(QueryMixin):
     '''
     Class for querying the employee_events database
     '''
-
-    name = ""
-    db_path = Path(__file__).parent / "employee_events.db"
 
     def names(self):
         return []
@@ -18,7 +13,6 @@ class QueryBase:
         '''
         Return df of notes
         '''
-        conn = sqlite3.connect(self.db_path)
         tbl_name = "notes"
 
         select_clause = None
@@ -38,15 +32,12 @@ class QueryBase:
             WHERE {where_clause}
             {order_clause}
         """
-        df = pd.read_sql_query(query, conn)
-        conn.close()
-        return df
+        return self.pandas_query(query)
 
     def event_counts(self, empid):
         '''
         Return df of events
         '''
-        conn = sqlite3.connect(self.db_path)
         tbl_name = "employee_events"
         query = f"""
             SELECT event_date, positive_events, negative_events
@@ -55,6 +46,4 @@ class QueryBase:
             GROUP BY event_date
             ORDER BY event_date
         """
-        df = pd.read_sql_query(query, conn)
-        conn.close()
-        return df
+        return self.pandas_query(query)

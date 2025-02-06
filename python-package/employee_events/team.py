@@ -1,7 +1,4 @@
 from .query_base import QueryBase
-import pandas as pd
-import sqlite3
-from .sql_execution import query
 
 
 class Team(QueryBase):
@@ -15,13 +12,11 @@ class Team(QueryBase):
         '''
         Return a list of tuples containing team names and ids
         '''
-        conn = sqlite3.connect(self.db_path)
         query = f"""
             SELECT team_name, team_id FROM {self.name}
             ORDER BY team_id ASC
         """
-        result = pd.read_sql_query(query, conn)
-        conn.close()
+        result = self.pandas_query(query)
         return list(result.itertuples(index=False, name=None))
 
     def username(self, teamid):
@@ -29,23 +24,21 @@ class Team(QueryBase):
         Return a list of tuples containing the team name for the given id
         Note: uses separate query, in place of using names method
         '''
-        conn = sqlite3.connect(self.db_path)
         query = f"""
             SELECT team_name, team_id
             FROM {self.name}
             WHERE team_id = {teamid}
         """
-        result = pd.read_sql_query(query, conn)
-        conn.close()
+        result = self.pandas_query(query)
         result = list(result.itertuples(index=False, name=None))
         if len(result) > 0:
             return result[0]
         else:
             return None
 
-    @query
     def get_employees(self, teamid):
-        return f"SELECT employee_id FROM employee WHERE team_id = {teamid}"
+        query = f"SELECT employee_id FROM employee WHERE team_id = {teamid}"
+        return self.query(query)
 
     def notes(self, teamid):
         '''
@@ -58,7 +51,6 @@ class Team(QueryBase):
         '''
         Return a pandas dataframe with the positive and negative events for the given team id
         '''
-        conn = sqlite3.connect(self.db_path)
         tbl_name = "employee_events"
         query = f"""
             SELECT positive_events, negative_events FROM (
@@ -72,6 +64,4 @@ class Team(QueryBase):
                     GROUP BY employee_id
                    )
                 """
-        df = pd.read_sql_query(query, conn)
-        conn.close()
-        return df
+        return self.pandas_query(query)
